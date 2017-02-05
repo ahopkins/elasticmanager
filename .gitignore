@@ -27,6 +27,7 @@ var/
 # Sublime
 *.sublime-*
 
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -89,4 +90,8 @@ ENV/
 .spyderproject
 
 # Rope project settings
+<<<<<<< HEAD
 .ropeproject
+=======
+.ropeproject
+>>>>>>> b21cfc5158b4b1d885931c6be77b60f552d9fab2
