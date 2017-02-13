@@ -9,7 +9,10 @@ This pacakge requires `elasticsearch-dsl` which you can get:
 
 ## Getting Started
 
-1. To get started, add the package to your repository (*`pip install` will be available once a more complete version is ready*).
+1. To get started, install from pip.
+
+  pip install elasticmanager
+
 1. Add `elasticmanager` to your `settings.py` (this enables management commands).
 1. Put the name of your index in `settings.py`: `ELASTICSEARCH_INDEX = 'myindex'`
 1. Subclass `elasticmanager.ElasticModel`.
