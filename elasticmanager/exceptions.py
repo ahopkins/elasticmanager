@@ -1,0 +1,2 @@
+class ElasticIndexNotFound(Exception):
+    pass
