@@ -13,6 +13,9 @@ from elasticsearch_dsl import Mapping, DocType, Index
 from elasticsearch_dsl.document import DocTypeMeta
 from elasticsearch.exceptions import NotFoundError, AuthorizationException
 
+from . import exceptions
+
+from copy import deepcopy
 import importlib
 
 
@@ -140,11 +143,9 @@ class ElasticManager(models.Manager):
     def count(self):
         if not hasattr(self, 'results'):
             self.execute()
-        return self.results.count
-        # TODO:
-        # - assign the count to a copy
-        # - clear() the results
-        # - return the copied count
+        count = deepcopy(self.results.count)
+        self.clear()
+        return count
 
     def first(self):
         return self[0]
@@ -254,19 +255,17 @@ class ElasticModel(models.Model):
                 pdoc.save()
             return pdoc
         else:
-            pass
-            # TODO:
-            # - Raise no index exception
+            raise exceptions.ElasticIndexNotFound
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         try:
-            self.index()
+            self.index(retry_on_conflict=10)
         except AuthorizationException:
             # TODO:
             # - Better solution
             #   This is a hack to open the Index if it is closed. 
-            #   Should probably run a test elsewhere to check if open or closed
+            #   Should probably run a check elsewhere to check if open or closed
             #   Perhaps in middleware, or same location as CONNECTION
             index = Index(self.__class__.elastic.get_index())
             index.open()
