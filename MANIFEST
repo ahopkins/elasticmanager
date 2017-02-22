@@ -5,6 +5,7 @@ README.md
 setup.py
 elasticmanager/__init__.py
 elasticmanager/doctypes.py
+elasticmanager/exceptions.py
 elasticmanager/models.py
 elasticmanager/management/__init__.py
 elasticmanager/management/commands/__init__.py
