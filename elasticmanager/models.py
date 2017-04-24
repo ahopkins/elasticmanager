@@ -26,7 +26,7 @@ options.DEFAULT_NAMES = options.DEFAULT_NAMES + (
 )
 
 field_map = {
-    'string': ['CharField','EmailField'],
+    'string': ['CharField', 'EmailField'],
     'byte': [],
     'short': [],
     'integer': [],
@@ -34,10 +34,9 @@ field_map = {
     'float': [],
     'double': [],
     'boolean': ['BooleanField'],
-    'date': ['DateField','DatetimeField'],
+    'date': ['DateField', 'DatetimeField'],
     'nested': [],
 }
-
 
 
 class ElasticManager(models.Manager):
@@ -54,7 +53,7 @@ class ElasticManager(models.Manager):
             return list(s[k])
         elif isinstance(k, int):
             try:
-                return list(s[k: k+1])[0]
+                return list(s[k: k + 1])[0]
             except IndexError:
                 raise IndexError("Requested object does not exist in the query")
 
@@ -97,7 +96,6 @@ class ElasticManager(models.Manager):
     def clear(self):
         self._set_search(None)
 
-
     def all(self):
         self.clear()
         s = self.get_search()
@@ -105,9 +103,15 @@ class ElasticManager(models.Manager):
         self._set_search(s)
         return self
 
-    def filter(self, **kwargs):
+    def filter(self, filter_type='term', **kwargs):
         s = self.get_search()
-        s = s.filter('term', **kwargs)
+        s = s.filter(filter_type, **kwargs)
+        self._set_search(s)
+        return self
+
+    def exclude(self, exclude_type='term', **kwargs):
+        s = self.get_search()
+        s = s.exclude(exclude_type, **kwargs)
         self._set_search(s)
         return self
 
@@ -120,13 +124,16 @@ class ElasticManager(models.Manager):
     def execute(self, page_size=None, page=None):
         page_size = page_size if page_size is not None else self.page_size
         results = self.get_search()
+        # import json
+        # raise Exception(json.dumps(results.to_dict()))
         paginator = Paginator(results, page_size)
         setattr(self, 'results', paginator)
         # self.clear()
         return self.page(page)
 
-    def page(self, page=1):
+    def page(self, page=None):
         paginator = getattr(self, 'results')
+        page = page if page else 1
         try:
             results = paginator.page(page)
         except PageNotAnInteger:
@@ -184,6 +191,7 @@ class ElasticManager(models.Manager):
         DT = self.get_doc_type()
         DT.init()
 
+
     def run_indexing(self):
         queryset = self.all_from_db()
         for instance in queryset:
@@ -209,7 +217,7 @@ class ElasticModel(models.Model):
             es_type = 'some-type'                   # Defaults to the models db_table name
             es_doc_type = nameOfSomeDocTypeClass    # Raises error if not implemented
 
-    
+
     """
     is_elastic = True
     objects = models.Manager()
@@ -243,10 +251,13 @@ class ElasticModel(models.Model):
                 value = getattr(self, name)
                 if info.get('type') == 'nested':
                     plist = []
-                    property_name = list(info.get('properties').keys())[0]
+                    property_names = list(info.get('properties').keys())
                     for item in value.all():
-                        value = getattr(item, property_name)
-                        plist.append({property_name: value})
+                        plist_obj = {}
+                        for property_name in property_names:
+                            value = getattr(item, property_name)
+                            plist_obj.update({property_name: value})
+                        plist.append(plist_obj)
                     setattr(pdoc, name, plist)
                 else:
                     if callable(value):
@@ -264,7 +275,7 @@ class ElasticModel(models.Model):
         except AuthorizationException:
             # TODO:
             # - Better solution
-            #   This is a hack to open the Index if it is closed. 
+            #   This is a hack to open the Index if it is closed.
             #   Should probably run a check elsewhere to check if open or closed
             #   Perhaps in middleware, or same location as CONNECTION
             index = Index(self.__class__.elastic.get_index())
