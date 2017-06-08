@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'elasticmanager',
   packages = ['elasticmanager','elasticmanager.management','elasticmanager.management.commands'],
-  version = '0.2.5.1',
+  version = '0.2.6',
   description = 'Django model manager like class for elasticsearch integration',
   author = 'Adam Hopkins',
   author_email = 'adam@optymizer.com',

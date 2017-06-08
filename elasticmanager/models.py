@@ -84,10 +84,11 @@ class ElasticManager(models.Manager):
         return base_type
 
     def get_search(self):
-        if not hasattr(self, 'search') or getattr(self, 'search', None) is None:
-            DT = self.get_doc_type()
-            s = DT.search()
-            setattr(self, 'search', s)
+        if not hasattr(self, 'search') or \
+           getattr(self, 'search', None) is None:
+                DT = self.get_doc_type()
+                s = DT.search()
+                setattr(self, 'search', s)
         return getattr(self, 'search')
 
     def _set_search(self, search):
@@ -159,7 +160,7 @@ class ElasticManager(models.Manager):
 
     def last(self):
         count = self.count()
-        return self[count-1]
+        return self[count - 1]
 
     def all_from_db(self):
         return super().all()
@@ -181,7 +182,6 @@ class ElasticManager(models.Manager):
 
     def last_from_db(self):
         return super().last()
-        
 
     def run_mapping(self):
         index = Index(self.get_index())
@@ -191,14 +191,13 @@ class ElasticManager(models.Manager):
         DT = self.get_doc_type()
         DT.init()
 
-
     def run_indexing(self):
         queryset = self.all_from_db()
         for instance in queryset:
             instance.index()
 
     def setup(self):
-        items = ('index','type','doc_type')
+        items = ('index', 'type', 'doc_type')
         for item in items:
             if getattr(self, item, None) is None:
                 method_name = "get_{}".format(item)
@@ -259,6 +258,14 @@ class ElasticModel(models.Model):
                             plist_obj.update({property_name: value})
                         plist.append(plist_obj)
                     setattr(pdoc, name, plist)
+                elif info.get('type') == 'object':
+                    obj = {}
+                    property_names = list(info.get('properties').keys())
+                    item = value
+                    for property_name in property_names:
+                        value = getattr(item, property_name)
+                        obj.update({property_name: value})
+                    setattr(pdoc, name, obj)
                 else:
                     if callable(value):
                         value = value()
